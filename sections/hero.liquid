@@ -1,0 +1,217 @@
+{% comment %}
+  Hero section for Kindred Coffee Roasters.
+  Full-width lifestyle imagery with headline, subheadline, and CTA.
+{% endcomment %}
+
+<div class="hero-section" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <div class="hero-section__media" aria-hidden="true">
+    {% if section.settings.background_image != blank %}
+      {{ section.settings.background_image | image_url: width: 2000 | image_tag: loading: "eager", fetchpriority: "high", sizes: "100vw" }}
+    {% else %}
+      <div class="hero-section__placeholder"></div>
+    {% endif %}
+    {% if section.settings.overlay_opacity > 0 %}
+      <div class="hero-section__overlay" style="opacity: {{ section.settings.overlay_opacity | divided_by: 100 }}"></div>
+    {% endif %}
+  </div>
+
+  <div class="hero-section__content" {{ section.shopify_attributes }}>
+    <div class="hero-section__inner">
+      {% if section.settings.headline != blank %}
+        <h1 class="hero-section__headline">
+          {{ section.settings.headline }}
+        </h1>
+      {% endif %}
+
+      {% if section.settings.subheadline != blank %}
+        <p class="hero-section__subheadline">
+          {{ section.settings.subheadline }}
+        </p>
+      {% endif %}
+
+      {% if section.settings.cta_text != blank and section.settings.cta_link != blank %}
+        <div class="hero-section__cta">
+          <a href="{{ section.settings.cta_link }}" class="button button">
+            {{ section.settings.cta_text }}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .hero-section {
+    position: relative;
+    width: 100%;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-section__media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .hero-section__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-section__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-background) 0%, color_mix(var(--color-background), var(--color-text) 15%) 100%);
+  }
+
+  .hero-section__overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--color-text);
+    pointer-events: none;
+  }
+
+  .hero-section__content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 24px;
+    text-align: center;
+  }
+
+  .hero-section__inner {
+    padding: 80px 0;
+  }
+
+  .hero-section__headline {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0 0 1.25rem;
+  }
+
+  .hero-section__subheadline {
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    line-height: 1.6;
+    color: color_mix(var(--color-text), transparent 30%);
+    max-width: 640px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .hero-section__cta .button {
+    padding: 16px 40px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hero-section__cta .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+  }
+
+  @media (max-width: 749px) {
+    .hero-section {
+      min-height: 50vh;
+    }
+    .hero-section__inner {
+      padding: 60px 0;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  // Parallax effect on scroll (optional, lightweight)
+  const heroSection = document.currentScript.closest('.hero-section');
+  if (heroSection && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    const media = heroSection.querySelector('.hero-section__media');
+    if (media) {
+      let ticking = false;
+      const handleScroll = () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            const rect = heroSection.getBoundingClientRect();
+            const scrolled = -rect.top;
+            if (rect.bottom > 0 && rect.top < window.innerHeight) {
+              media.style.transform = `translateY(${scrolled * 0.15}px)`;
+            }
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Hero",
+  "class": "hero-section",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "default": 25,
+      "info": "Dark overlay over the image to improve text legibility"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-3"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Kindred Coffee Roasters"
+    },
+    {
+      "type": "richtext",
+      "id": "subheadline",
+      "label": "Subheadline",
+      "default": "<p>Exceptional coffee, roasted with intention. From our roastery to your cup.</p>"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA button text",
+      "default": "Shop Coffee"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero",
+      "category": "Homepage"
+    }
+  ]
+}
+{% endschema %}

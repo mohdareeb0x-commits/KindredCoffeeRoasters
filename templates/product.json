@@ -1,0 +1,132 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product-kindred",
+      "blocks": {
+        "title": {
+          "type": "title"
+        },
+        "price": {
+          "type": "price"
+        },
+        "subscription_builder": {
+          "type": "subscription_builder",
+          "settings": {
+            "heading": "Build your subscription",
+            "roast_label": "Roast level",
+            "grind_label": "Grind type",
+            "frequency_label": "Delivery frequency",
+            "onetime_label": "One-time purchase",
+            "subscribe_label": "Subscribe & Save 15%",
+            "badge_text": "BEST VALUE",
+            "interval_label": "Deliver every",
+            "price_label": "Price per bag",
+            "show_savings": true,
+            "savings_text": "You save",
+            "show_subscribe_badge": true,
+            "subscription_app": "mock",
+            "grind_options": "[{\"label\":\"Whole Bean\",\"value\":\"Whole Bean\"},{\"label\":\"Drip / Pour Over\",\"value\":\"Drip\"},{\"label\":\"Espresso\",\"value\":\"Espresso\"},{\"label\":\"French Press\",\"value\":\"French Press\"}]",
+            "interval_options": "[{\"label\":\"Every week\",\"value\":\"weekly\"},{\"label\":\"Every 2 weeks\",\"value\":\"biweekly\"},{\"label\":\"Every month\",\"value\":\"monthly\"},{\"label\":\"Every 3 months\",\"value\":\"quarterly\"}]"
+          }
+        },
+        "flavor_wheel": {
+          "type": "flavor_wheel",
+          "settings": {
+            "heading": "Tasting notes",
+            "show_wheel": true
+          }
+        },
+        "brew_guide": {
+          "type": "brew_guide",
+          "settings": {
+            "heading": "Brew guide",
+            "brew_methods": "[{\"name\":\"Pour Over (V60)\",\"ratio\":\"1:16\",\"grind\":\"Medium-fine\",\"temp\":\"93°C / 200°F\",\"time\":\"2:30-3:00\",\"steps\":[\"Place filter and rinse with hot water\",\"Add 22g coffee, shake to level\",\"Bloom with 50g water, wait 30s\",\"Pour remaining 300g in circular motion\",\"Total brew time ~2:45\"]},{\"name\":\"French Press\",\"ratio\":\"1:15\",\"grind\":\"Coarse\",\"temp\":\"96°C / 205°F\",\"time\":\"4:00\",\"steps\":[\"Add 30g coffee to press\",\"Pour 450g water, start timer\",\"At 4:00, break crust and skim\",\"Press plunger slowly\",\"Decant immediately\"]},{\"name\":\"Espresso\",\"ratio\":\"1:2\",\"grind\":\"Fine\",\"temp\":\"93°C / 200°F\",\"time\":\"25-30s\",\"steps\":[\"Dose 18-20g in portafilter\",\"Distribute and tamp evenly\",\"Lock in and start shot immediately\",\"Target 36-40g yield in 25-30s\",\"Enjoy straight or with milk\"]}]"
+          }
+        },
+        "description": {
+          "type": "description"
+        },
+        "quantity_selector": {
+          "type": "quantity_selector"
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "picker_type": "button",
+            "swatch_shape": "circle"
+          }
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "show_gift_card_recipient": true,
+            "show_physical_stores": true
+          }
+        },
+        "share": {
+          "type": "share",
+          "settings": {
+            "share_label": "Share"
+          }
+        },
+        "rating": {
+          "type": "rating"
+        }
+      },
+      "block_order": [
+        "title",
+        "price",
+        "subscription_builder",
+        "flavor_wheel",
+        "brew_guide",
+        "description",
+        "quantity_selector",
+        "variant_picker",
+        "buy_buttons",
+        "share",
+        "rating"
+      ],
+      "settings": {
+        "enable_sticky_info": true,
+        "color_scheme": "scheme-1",
+        "media_position": "left",
+        "gallery_layout": "stacked",
+        "media_size": "large",
+        "mobile_thumbnails": "stacked",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "disclosures": {
+      "type": "disclosures",
+      "settings": {
+        "padding_top": 36,
+        "padding_bottom": 0
+      }
+    },
+    "related-products": {
+      "type": "related-products",
+      "settings": {
+        "heading": "You may also like",
+        "heading_size": "h2",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "color_scheme": "scheme-1",
+        "image_ratio": "square",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_rating": false,
+        "columns_mobile": "2",
+        "padding_top": 36,
+        "padding_bottom": 28
+      }
+    }
+  },
+  "order": [
+    "main",
+    "disclosures",
+    "related-products"
+  ]
+}

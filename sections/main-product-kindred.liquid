@@ -1,0 +1,1423 @@
+{% comment %}
+  Custom product page for Kindred Coffee Roasters.
+  Includes: subscription builder, grind selector, frequency selector, flavor wheel, brew guide.
+{% endcomment %}
+
+<div class="kindred-product" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <product-info
+    id="MainProduct-{{ section.id }}"
+    class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}"
+    data-section="{{ section.id }}"
+    data-product-id="{{ product.id }}"
+    data-update-url="true"
+    data-url="{{ product.url }}"
+  >
+    {{ 'section-main-product.css' | asset_url | stylesheet_tag }}
+    {{ 'component-accordion.css' | asset_url | stylesheet_tag }}
+    {{ 'component-price.css' | asset_url | stylesheet_tag }}
+    {{ 'component-slider.css' | asset_url | stylesheet_tag }}
+    {{ 'component-rating.css' | asset_url | stylesheet_tag }}
+    {{ 'component-deferred-media.css' | asset_url | stylesheet_tag }}
+    {{ 'component-product-variant-picker.css' | asset_url | stylesheet_tag }}
+    {{ 'component-swatch-input.css' | asset_url | stylesheet_tag }}
+    {{ 'component-swatch.css' | asset_url | stylesheet_tag }}
+
+    {%- style -%}
+      .section-{{ section.id }}-padding {
+        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+      }
+
+      @media screen and (min-width: 750px) {
+        .section-{{ section.id }}-padding {
+          padding-top: {{ section.settings.padding_top }}px;
+          padding-bottom: {{ section.settings.padding_bottom }}px;
+        }
+      }
+    {%- endstyle -%}
+
+    <script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'kindred-product-builder.js' | asset_url }}" defer="defer"></script>
+    {%- if request.design_mode -%}
+      <script src="{{ 'theme-editor.js' | asset_url }}" defer="defer"></script>
+    {%- endif -%}
+
+    {% assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' %}
+    <product-component view-event-payload="{{ product | standard_event_data: 'view', context: 'page' | escape }}">
+      <div class="page-width">
+        <div class="product product--{{ section.settings.media_size }} product--{{ section.settings.media_position }} product--{{ section.settings.gallery_layout }} grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
+
+          <!-- Media Gallery -->
+          <div class="grid__item product__media-wrapper">
+            {% render 'product-media-gallery', variant_images: variant_images %}
+          </div>
+
+          <!-- Product Info -->
+          <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+            <section id="ProductInfo-{{ section.id }}" class="product__info-container{% if section.settings.enable_sticky_info %} product__column-sticky{% endif %}">
+
+              {%- assign product_form_id = 'product-form-' | append: section.id -%}
+
+              {%- for block in section.blocks -%}
+                {%- case block.type -%}
+                  {%- when '@app' -%}
+                    {% render block %}
+                  {%- when 'text' -%}
+                    <p class="product__text inline-richtext{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}" {{ block.shopify_attributes }}>
+                      {{- block.settings.text -}}
+                    </p>
+                  {%- when 'title' -%}
+                    <div class="product__title" {{ block.shopify_attributes }}>
+                      <h1>{{ product.title | escape }}</h1>
+                    </div>
+                  {%- when 'price' -%}
+                    <div id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
+                      {%- render 'price', product: product, use_variant: true, show_badges: true, price_class: 'price--large' -%}
+                    </div>
+                    <div {{ block.shopify_attributes }}>
+                      {%- assign product_form_installment_id = 'product-form-installment-' | append: section.id -%}
+                      {%- form 'product', product, id: product_form_installment_id, class: 'installment caption-large' -%}
+                        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                        {{ form | payment_terms }}
+                      {%- endform -%}
+                    </div>
+                  {%- when 'inventory' -%}
+                    <p class="product__inventory{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.inventory_management != 'shopify' %} visibility-hidden{% endif %}" {{ block.shopify_attributes }} id="Inventory-{{ section.id }}" role="status">
+                      {%- if product.selected_or_first_available_variant.inventory_management == 'shopify' -%}
+                        {%- if product.selected_or_first_available_variant.inventory_quantity > 0 -%}
+                          {%- if product.selected_or_first_available_variant.inventory_quantity <= block.settings.inventory_threshold -%}
+                            <span class="svg-wrapper" style="color: rgb(238, 148, 65)">{{- 'icon-inventory-status.svg' | inline_asset_content -}}</span>
+                            {%- if block.settings.show_inventory_quantity -%} {{- 'products.product.inventory_low_stock_show_count' | t: quantity: product.selected_or_first_available_variant.inventory_quantity -}} {%- else -%} {{- 'products.product.inventory_low_stock' | t -}} {%- endif -%}
+                          {%- else -%}
+                            <span class="svg-wrapper" style="color: rgb(62, 214, 96)">{{- 'icon-inventory-status.svg' | inline_asset_content -}}</span>
+                            {%- if block.settings.show_inventory_quantity -%} {{- 'products.product.inventory_in_stock_show_count' | t: quantity: product.selected_or_first_available_variant.inventory_quantity -}} {%- else -%} {{- 'products.product.inventory_in_stock' | t -}} {%- endif -%}
+                          {%- endif -%}
+                        {%- else -%}
+                          {%- if product.selected_or_first_available_variant.inventory_policy == 'continue' -%}
+                            <span class="svg-wrapper" style="color: rgb(62, 214, 96)">{{- 'icon-inventory-status.svg' | inline_asset_content -}}</span> {{- 'products.product.inventory_out_of_stock_continue_selling' | t -}}
+                          {%- else -%}
+                            <span class="svg-wrapper" style="color: rgb(200, 200, 200)">{{- 'icon-inventory-status.svg' | inline_asset_content -}}</span> {{- 'products.product.inventory_out_of_stock' | t -}}
+                          {%- endif -%}
+                        {%- endif -%}
+                      {%- endif -%}
+                    </p>
+                  {%- when 'description' -%}
+                    {%- if product.description != blank -%}
+                      <div class="product__description rte quick-add-hidden" {{ block.shopify_attributes }}>{{ product.description }}</div>
+                    {%- endif -%}
+                  {%- when 'sku' -%}
+                    <p class="product__sku{% if block.settings.text_style == 'uppercase' %} caption-with-letter-spacing{% elsif block.settings.text_style == 'subtitle' %} subtitle{% endif %}{% if product.selected_or_first_available_variant.sku.size == 0 %} visibility-hidden{% endif %}" id="Sku-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
+                      <span class="visually-hidden">{{ 'products.product.sku' | t }}:</span> {{- product.selected_or_first_available_variant.sku -}}
+                    </p>
+                  {%- when 'custom_liquid' -%}
+                    {{ block.settings.custom_liquid }}
+                  {%- when 'collapsible_tab' -%}
+                    <div class="product__accordion accordion quick-add-hidden" {{ block.shopify_attributes }}>
+                      <details id="Details-{{ block.id }}-{{ section.id }}">
+                        <summary>
+                          <div class="summary__title">
+                            {% render 'icon-accordion', icon: block.settings.icon %}
+                            <h2 class="h4 accordion__title inline-richtext">{{ block.settings.heading | default: block.settings.page.title | escape }}</h2>
+                          </div>
+                          {{- 'icon-caret.svg' | inline_asset_content -}}
+                        </summary>
+                        <div class="accordion__content rte" id="ProductAccordion-{{ block.id }}-{{ section.id }}">{{ block.settings.content }}{{ block.settings.page.content }}</div>
+                      </details>
+                    </div>
+                  {%- when 'quantity_selector' -%}
+                    <div id="Quantity-Form-{{ section.id }}" class="product-form__input product-form__quantity{% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_vertical_offset < 0 %} product-form__quantity-top{% endif %}" {{ block.shopify_attributes }}>
+                      {%- assign cart_qty = cart | item_count_for_variant: product.selected_or_first_available_variant.id -%}
+                      <span class="visually-hidden" id="quantity-label-{{ section.id }}">{%- if cart_qty > 0 -%}{{- 'products.product.quantity.in_cart_aria_label' | t: quantity: cart_qty -}}{%- else -%}{{- 'products.product.quantity.label' | t -}}{%- endif -%}</span>
+                      <label class="quantity__label form__label" for="Quantity-{{ section.id }}" aria-labelledby="quantity-label-{{ section.id }}"><span aria-hidden="true">{{ 'products.product.quantity.label' | t }}</span><span class="quantity__rules-cart{% if cart_qty == 0 %} hidden{% endif %}" aria-hidden="true">({{- 'products.product.quantity.in_cart_html' | t: quantity: cart_qty -}})</span></label>
+                      <quantity-input class="quantity" data-url="{{ product.url }}" data-section="{{ section.id }}">
+                        <button class="quantity__button" name="minus" type="button"><span class="visually-hidden">{{- 'products.product.quantity.decrease' | t: product: product.title | escape -}}</span><span class="svg-wrapper">{{- 'icon-minus.svg' | inline_asset_content -}}</span></button>
+                        <input class="quantity__input" type="number" name="quantity" id="Quantity-{{ section.id }}" data-cart-quantity="{{ cart_qty }}" data-min="{{ product.selected_or_first_available_variant.quantity_rule.min }}" min="{{ product.selected_or_first_available_variant.quantity_rule.min }}" {% if product.selected_or_first_available_variant.quantity_rule.max != null %}data-max="{{ product.selected_or_first_available_variant.quantity_rule.max }}" max="{{ product.selected_or_first_available_variant.quantity_rule.max }}"{% endif %} step="{{ product.selected_or_first_available_variant.quantity_rule.increment }}" value="{{ product.selected_or_first_available_variant.quantity_rule.min }}" form="{{ product_form_id }}"><button class="quantity__button" name="plus" type="button"><span class="visually-hidden">{{- 'products.product.quantity.increase' | t: product: product.title | escape -}}</span><span class="svg-wrapper">{{- 'icon-plus.svg' | inline_asset_content -}}</span></button>
+                      </quantity-input>
+                    </div>
+
+                  {%- when 'subscription_builder' -%}
+                    <!-- SUBSCRIPTION BUILDER - Custom block for coffee subscription options -->
+                    <div class="kindred-subscription-builder" {{ block.shopify_attributes }}>
+                      <h3 class="kindred-builder__heading">{{ block.settings.heading | default: 'Build your subscription' }}</h3>
+
+                      <!-- Roast Type Selector -->
+                      {% if product.metafields.custom.roast_types != blank %}
+                        <fieldset class="kindred-builder__field">
+                          <legend class="kindred-builder__label">{{ block.settings.roast_label | default: 'Roast level' }}</legend>
+                          <div class="kindred-builder__options kindred-builder__options--pills" data-option="roast" data-target="roast_type">
+                            {% for roast in product.metafields.custom.roast_types %}
+                              <button type="button" class="kindred-builder__pill{% if forloop.first %} kindred-builder__pill--selected{% endif %}" data-value="{{ roast }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                                {{ roast }}
+                              </button>
+                            {% endfor %}
+                          </div>
+                          <input type="hidden" name="properties[Roast Type]" id="roast_type" value="{{ product.metafields.custom.roast_types.first }}" form="{{ product_form_id }}">
+                        </fieldset>
+                      {% endif %}
+
+                      <!-- Grind Type Selector -->
+                      <fieldset class="kindred-builder__field">
+                        <legend class="kindred-builder__label">{{ block.settings.grind_label | default: 'Grind type' }}</legend>
+                        <div class="kindred-builder__options kindred-builder__options--pills" data-option="grind" data-target="grind_type">
+                          {% for grind in block.settings.grind_options %}
+                            <button type="button" class="kindred-builder__pill{% if forloop.first %} kindred-builder__pill--selected{% endif %}" data-value="{{ grind.value }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                              {{ grind.label }}
+                            </button>
+                          {% endfor %}
+                        </div>
+                        <input type="hidden" name="properties[Grind Type]" id="grind_type" value="{{ block.settings.grind_options.first.value }}" form="{{ product_form_id }}">
+                      </fieldset>
+
+                      <!-- Frequency Selector (One-time / Subscribe) -->
+                      <fieldset class="kindred-builder__field kindred-builder__field--frequency">
+                        <legend class="kindred-builder__label">{{ block.settings.frequency_label | default: 'Delivery frequency' }}</legend>
+                        <div class="kindred-builder__frequency-options" data-target="frequency">
+                          <label class="kindred-builder__frequency-option">
+                            <input type="radio" name="frequency" value="onetime" checked form="{{ product_form_id }}">
+                            <span class="kindred-builder__frequency-content">
+                              <span class="kindred-builder__frequency-name">{{ block.settings.onetime_label | default: 'One-time purchase' }}</span>
+                              <span class="kindred-builder__frequency-price" data-onetime-price>{{ product.price | money }}</span>
+                            </span>
+                          </label>
+                          <label class="kindred-builder__frequency-option kindred-builder__frequency-option--subscribe">
+                            <input type="radio" name="frequency" value="subscribe" form="{{ product_form_id }}">
+                            <span class="kindred-builder__frequency-content">
+                              <span class="kindred-builder__frequency-name">
+                                {{ block.settings.subscribe_label | default: 'Subscribe & Save 15%' }}
+                                <span class="kindred-builder__badge">{{ block.settings.badge_text | default: 'BEST VALUE' }}</span>
+                              </span>
+                              <span class="kindred-builder__frequency-price" data-subscribe-price>{{ product.price | times: 0.85 | money }}</span>
+                            </span>
+                          </label>
+                        </div>
+                        <input type="hidden" name="properties[Frequency]" id="frequency" value="onetime" form="{{ product_form_id }}">
+
+                        <!-- Frequency interval selector (shown when subscribe is selected) -->
+                        <div class="kindred-builder__interval" id="interval-selector" hidden>
+                          <span class="kindred-builder__interval-label">{{ block.settings.interval_label | default: 'Deliver every' }}</span>
+                          <select name="properties[Interval]" id="interval" form="{{ product_form_id }}" class="kindred-builder__select">
+                            {% for interval in block.settings.interval_options %}
+                              <option value="{{ interval.value }}">{{ interval.label }}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </fieldset>
+
+                      <!-- Dynamic Price Display -->
+                      <div class="kindred-builder__price-summary" aria-live="polite">
+                        <div class="kindred-builder__price-row">
+                          <span class="kindred-builder__price-label">{{ block.settings.price_label | default: 'Price per bag' }}</span>
+                          <span class="kindred-builder__price-value" id="dynamic-price">{{ product.price | money }}</span>
+                        </div>
+                        {% if block.settings.show_savings %}
+                          <div class="kindred-builder__savings" id="savings-display" hidden>
+                            <span class="kindred-builder__savings-text">{{ block.settings.savings_text | default: 'You save' }}</span>
+                            <span class="kindred-builder__savings-value" id="savings-value"></span>
+                            <span class="kindred-builder__savings-period" id="savings-period"></span>
+                          </div>
+                        {% endif %}
+                      </div>
+
+                      <!-- Subscribe & Save Badge (UI only - billing handled by Recharge/Shopify Subscriptions) -->
+                      {% if block.settings.show_subscribe_badge %}
+                        <div class="kindred-subscribe-badge" {% if block.settings.subscription_app == 'recharge' %}data-recharge{% elsif block.settings.subscription_app == 'shopify' %}data-shopify-subscriptions{% else %}data-mock{% endif %}>
+                          <svg class="kindred-badge__icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><path d="M15 9h6v6"/><path d="M12 17v5"/><path d="M9 17v5"/></svg>
+                          <span class="kindred-badge__text">{{ block.settings.badge_text | default: 'Subscribe & Save 15%' }}</span>
+                          {% if block.settings.subscription_app != 'mock' %}
+                            <span class="kindred-badge__note">{{ 'products.product.subscription_note' | t }}</span>
+                          {% else %}
+                            <span class="kindred-badge__note kindred-badge__note--demo">{{ 'products.product.demo_note' | t }}</span>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+
+                  {%- when 'flavor_wheel' -%}
+                    <!-- FLAVOR WHEEL / TASTING NOTES -->
+                    <div class="kindred-flavor-wheel" {{ block.shopify_attributes }}>
+                      <h3 class="kindred-flavor__heading">{{ block.settings.heading | default: 'Tasting notes' }}</h3>
+                      {% if product.metafields.custom.tasting_notes != blank %}
+                        <div class="kindred-flavor__tags">
+                          {% for note in product.metafields.custom.tasting_notes %}
+                            <span class="kindred-flavor__tag">{{ note }}</span>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                      {% if block.settings.show_wheel and product.metafields.custom.flavor_profile != blank %}
+                        <div class="kindred-flavor__wheel" aria-label="Flavor profile">
+                          <div class="kindred-flavor__visual" aria-hidden="true">
+                            <div class="kindred-flavor__radial">
+                              {% for note in product.metafields.custom.flavor_profile %}
+                                <div class="kindred-flavor__spoke" style="--rotation: {{ forloop.index0 | times: 360 | divided_by: product.metafields.custom.flavor_profile.size }}deg; --intensity: {{ note.intensity }}">
+                                  <span class="kindred-flavor__spoke-label">{{ note.name }}</span>
+                                  <span class="kindred-flavor__spoke-dot"></span>
+                                </div>
+                              {% endfor %}
+                            </div>
+                          </div>
+                          <div class="kindred-flavor__legend">
+                            {% for note in product.metafields.custom.flavor_profile %}
+                              <div class="kindred-flavor__legend-item">
+                                <span class="kindred-flavor__legend-dot" style="--intensity: {{ note.intensity }}"></span>
+                                <span class="kindred-flavor__legend-name">{{ note.name }}</span>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                      {% endif %}
+                    </div>
+
+                  {%- when 'brew_guide' -%}
+                    <!-- BREW GUIDE ACCORDION -->
+                    <div class="kindred-brew-guide" {{ block.shopify_attributes }}>
+                      <h3 class="kindred-brew__heading">{{ block.settings.heading | default: 'Brew guide' }}</h3>
+                      <div class="kindred-brew__accordion accordion">
+                        {% for method in block.settings.brew_methods %}
+                          <details class="kindred-brew__method">
+                            <summary>
+                              <span class="kindred-brew__method-name">{{ method.name }}</span>
+                              <span class="kindred-brew__method-ratio">{{ method.ratio }}</span>
+                              {{- 'icon-caret.svg' | inline_asset_content -}}
+                            </summary>
+                            <div class="kindred-brew__content rte">
+                              <div class="kindred-brew__meta">
+                                <div class="kindred-brew__meta-item">
+                                  <span class="kindred-brew__meta-label">Grind</span>
+                                  <span class="kindred-brew__meta-value">{{ method.grind }}</span>
+                                </div>
+                                <div class="kindred-brew__meta-item">
+                                  <span class="kindred-brew__meta-label">Water temp</span>
+                                  <span class="kindred-brew__meta-value">{{ method.temp }}</span>
+                                </div>
+                                <div class="kindred-brew__meta-item">
+                                  <span class="kindred-brew__meta-label">Time</span>
+                                  <span class="kindred-brew__meta-value">{{ method.time }}</span>
+                                </div>
+                              </div>
+                              <ol class="kindred-brew__steps">
+                                {% for step in method.steps %}
+                                  <li>{{ step }}</li>
+                                {% endfor %}
+                              </ol>
+                            </div>
+                          </details>
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                  {%- when 'buy_buttons' -%}
+                    {%- render 'buy-buttons', block: block, product: product, product_form_id: product_form_id, section_id: section.id, show_pickup_availability: true -%}
+                  {%- when 'share' -%}
+                    {% liquid
+                      assign share_url = product.selected_variant.url | default: product.url | prepend: request.origin
+                      render 'share-button', block: block, share_link: share_url
+                    %}
+                  {%- when 'disclosures' -%}
+                    {%- render 'product-disclosures', product: product, heading: block.settings.heading, heading_size: block.settings.heading_size, open_by_default: block.settings.open_by_default, block: block, surface: 'product_page' -%}
+                  {%- when 'variant_picker' -%}
+                    {% render 'product-variant-picker', product: product, block: block, product_form_id: product_form_id %}
+                  {%- when 'rating' -%}
+                    {%- if product.metafields.reviews.rating.value != blank -%}
+                      <div class="rating-wrapper">
+                        {% liquid
+                          assign rating_decimal = 0
+                          assign decimal = product.metafields.reviews.rating.value.rating | modulo: 1
+                          if decimal >= 0.3 and decimal <= 0.7
+                            assign rating_decimal = 0.5
+                          elsif decimal > 0.7
+                            assign rating_decimal = 1
+                          endif
+                        %}
+                        <div class="rating" role="img" aria-label="{{ 'accessibility.star_reviews_info' | t: rating_value: product.metafields.reviews.rating.value, rating_max: product.metafields.reviews.rating.value.scale_max }}"><span aria-hidden="true" class="rating-star" style="--rating: {{ product.metafields.reviews.rating.value.rating | floor }}; --rating-max: {{ product.metafields.reviews.rating.value.scale_max }}; --rating-decimal: {{ rating_decimal }};"></span></div>
+                        <p class="rating-text caption"><span aria-hidden="true">{{- product.metafields.reviews.rating.value }} / {{ product.metafields.reviews.rating.value.scale_max -}}</span></p>
+                        <p class="rating-count caption"><span aria-hidden="true">({{ product.metafields.reviews.rating_count }})</span><span class="visually-hidden">{{- product.metafields.reviews.rating_count }} {{ 'accessibility.total_reviews' | t -}}</span></p>
+                      </div>
+                    {%- endif -%}
+                {%- endcase -%}
+              {%- endfor -%}
+
+            </section>
+          </div>
+        </div>
+
+        {% render 'product-media-modal', variant_images: variant_images %}
+
+        {%- assign popups = section.blocks | where: 'type', 'popup' -%}
+        {%- for block in popups -%}
+          <modal-dialog id="PopupModal-{{ block.id }}" class="product-popup-modal" {{ block.shopify_attributes }}>
+            <div role="dialog" aria-label="{{ block.settings.text }}" aria-modal="true" class="product-popup-modal__content" tabindex="-1">
+              <button id="ModalClose-{{ block.id }}" type="button" class="product-popup-modal__toggle" aria-label="{{ 'accessibility.close' | t }}">{{- 'icon-close.svg' | inline_asset_content -}}</button>
+              <div class="product-popup-modal__content-info"><h1 class="h2">{{ block.settings.page.title | escape }}</h1>{{ block.settings.page.content }}</div>
+            </div>
+          </modal-dialog>
+        {%- endfor -%}
+
+        {%- if product.media.size > 0 -%}
+          <script src="{{ 'product-modal.js' | asset_url }}" defer="defer"></script>
+          <script src="{{ 'media-gallery.js' | asset_url }}" defer="defer"></script>
+        {%- endif -%}
+
+        <script type="application/ld+json">{{ product | structured_data }}</script>
+      </div>
+    </product-component>
+  </product-info>
+</div>
+
+{% stylesheet %}
+  /* ==========================================================================
+     KINDRED PRODUCT PAGE STYLES
+     ========================================================================== */
+
+  .kindred-product {
+    --color-accent: #C97B3C;
+    --color-accent-dark: #8B4E2C;
+    --color-text-muted: color_mix(var(--color-text), transparent 45%);
+  }
+
+  /* Subscription Builder */
+  .kindred-subscription-builder {
+    padding: 24px;
+    background: color_mix(var(--color-background), var(--color-text) 2%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+    margin: 24px 0;
+  }
+
+  .kindred-builder__heading {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0 0 20px;
+  }
+
+  .kindred-builder__field {
+    margin-bottom: 20px;
+  }
+
+  .kindred-builder__field:last-of-type {
+    margin-bottom: 16px;
+  }
+
+  .kindred-builder__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin: 0 0 10px;
+    display: block;
+  }
+
+  .kindred-builder__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .kindred-builder__pill {
+    padding: 10px 18px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    background: var(--color-background);
+    border: 1px solid color_mix(var(--color-text), transparent 85%);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .kindred-builder__pill:hover {
+    border-color: color_mix(var(--color-text), transparent 60%);
+    background: color_mix(var(--color-background), var(--color-text) 3%);
+  }
+
+  .kindred-builder__pill--selected {
+    background: var(--color-text);
+    color: var(--color-background);
+    border-color: var(--color-text);
+  }
+
+  .kindred-builder__pill[aria-pressed="true"] {
+    background: var(--color-text);
+    color: var(--color-background);
+    border-color: var(--color-text);
+  }
+
+  /* Frequency Options */
+  .kindred-builder__frequency-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .kindred-builder__frequency-option {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: var(--color-background);
+    border: 1px solid color_mix(var(--color-text), transparent 85%);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .kindred-builder__frequency-option:hover {
+    border-color: color_mix(var(--color-text), transparent 60%);
+  }
+
+  .kindred-builder__frequency-option:has(input:checked) {
+    border-color: var(--color-accent);
+    background: color_mix(var(--color-background), var(--color-accent) 5%);
+  }
+
+  .kindred-builder__frequency-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .kindred-builder__frequency-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+  }
+
+  .kindred-builder__frequency-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .kindred-builder__badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    background: var(--color-accent);
+    color: #2D1B15;
+    border-radius: 9999px;
+  }
+
+  .kindred-builder__frequency-price {
+    font-family: var(--font-heading-family);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .kindred-builder__interval {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-top: 8px;
+    background: color_mix(var(--color-background), var(--color-accent) 5%);
+    border: 1px solid color_mix(var(--color-accent), transparent 70%);
+    border-radius: 12px;
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .kindred-builder__interval-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  .kindred-builder__select {
+    flex: 1;
+    max-width: 200px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    color: var(--color-text);
+    background: var(--color-background);
+    border: 1px solid color_mix(var(--color-text), transparent 80%);
+    border-radius: 8px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232D1B15' stroke-width='1.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+  }
+
+  /* Price Summary */
+  .kindred-builder__price-summary {
+    padding-top: 16px;
+    border-top: 1px solid color_mix(var(--color-text), transparent 88%);
+    margin-top: 8px;
+  }
+
+  .kindred-builder__price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .kindred-builder__price-label {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+  }
+
+  .kindred-builder__price-value {
+    font-family: var(--font-heading-family);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+    transition: all 0.2s ease;
+  }
+
+  .kindred-builder__savings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: color_mix(var(--color-background), #2E7D32 10%);
+    border: 1px solid color_mix(#2E7D32, transparent 70%);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #2E7D32;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .kindred-builder__savings-value {
+    font-weight: 700;
+  }
+
+  .kindred-builder__savings-period {
+    color: color_mix(#2E7D32, transparent 30%);
+  }
+
+  /* Subscribe Badge */
+  .kindred-subscribe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+    border-radius: 12px;
+    color: #2D1B15;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  .kindred-badge__note {
+    font-weight: 400;
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .kindred-badge__note--demo {
+    font-style: italic;
+  }
+
+  /* Flavor Wheel */
+  .kindred-flavor-wheel {
+    margin: 24px 0;
+  }
+
+  .kindred-flavor__heading {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0 0 16px;
+  }
+
+  .kindred-flavor__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .kindred-flavor__tag {
+    padding: 6px 14px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    background: color_mix(var(--color-background), var(--color-text) 3%);
+    border: 1px solid color_mix(var(--color-text), transparent 85%);
+    border-radius: 9999px;
+  }
+
+  .kindred-flavor__wheel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+    padding: 24px;
+    background: color_mix(var(--color-background), var(--color-text) 2%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+  }
+
+  .kindred-wheel__svg {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto;
+    color: var(--color-accent);
+  }
+
+  .kindred-flavor__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .kindred-flavor__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .kindred-flavor__legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    opacity: calc(var(--intensity) / 10 * 0.8 + 0.2);
+    flex-shrink: 0;
+  }
+
+  /* Brew Guide */
+  .kindred-brew-guide {
+    margin: 24px 0;
+  }
+
+  .kindred-brew__heading {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0 0 16px;
+  }
+
+  .kindred-brew__accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .kindred-brew__method {
+    background: color_mix(var(--color-background), var(--color-text) 2%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .kindred-brew__method summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .kindred-brew__method summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .kindred-brew__method-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .kindred-brew__method-ratio {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: color_mix(var(--color-background), var(--color-accent) 10%);
+    padding: 4px 10px;
+    border-radius: 9999px;
+  }
+
+  .kindred-brew__content {
+    padding: 0 20px 20px;
+    border-top: 1px solid color_mix(var(--color-text), transparent 88%);
+    animation: slideDown 0.2s ease;
+  }
+
+  .kindred-brew__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid color_mix(var(--color-text), transparent 90%);
+  }
+
+  .kindred-brew__meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .kindred-brew__meta-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .kindred-brew__meta-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .kindred-brew__steps {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.875rem;
+    line-height: 1.8;
+    color: var(--color-text-muted);
+  }
+
+  .kindred-brew__steps li {
+    margin-bottom: 8px;
+  }
+
+  /* Responsive */
+  @media (max-width: 749px) {
+    .kindred-subscription-builder {
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .kindred-builder__pill {
+      padding: 8px 14px;
+      font-size: 0.8125rem;
+    }
+
+    .kindred-builder__frequency-option {
+      padding: 14px;
+    }
+
+    .kindred-builder__frequency-price {
+      font-size: 1.125rem;
+    }
+
+    .kindred-flavor__wheel {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .kindred-wheel__svg {
+      max-width: 240px;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  // Kindred Product Builder - Handles subscription/grind/frequency selection
+  // This is UI-only logic. Actual subscription billing requires Recharge/Shopify Subscriptions integration.
+
+  class KindredProductBuilder {
+    constructor(container) {
+      this.container = container;
+      this.form = container.closest('form') || document.getElementById(`product-form-${container.dataset.sectionId}`);
+      this.init();
+    }
+
+    init() {
+      this.bindPillSelectors();
+      this.bindFrequencyRadios();
+      this.updatePrice();
+    }
+
+    bindPillSelectors() {
+      const pillGroups = this.container.querySelectorAll('.kindred-builder__options[data-option]');
+      pillGroups.forEach(group => {
+        const pills = group.querySelectorAll('.kindred-builder__pill');
+        const targetId = group.dataset.target;
+        const hiddenInput = document.getElementById(targetId);
+
+        pills.forEach(pill => {
+          pill.addEventListener('click', () => {
+            // Update visual state
+            pills.forEach(p => {
+              p.classList.remove('kindred-builder__pill--selected');
+              p.setAttribute('aria-pressed', 'false');
+            });
+            pill.classList.add('kindred-builder__pill--selected');
+            pill.setAttribute('aria-pressed', 'true');
+
+            // Update hidden input
+            if (hiddenInput) {
+              hiddenInput.value = pill.dataset.value;
+            }
+
+            this.updatePrice();
+          });
+
+          // Keyboard support
+          pill.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              pill.click();
+            }
+          });
+        });
+      });
+    }
+
+    bindFrequencyRadios() {
+      const radios = this.container.querySelectorAll('input[name="frequency"]');
+      const intervalSelector = document.getElementById('interval-selector');
+      const frequencyInput = document.getElementById('frequency');
+
+      radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (frequencyInput) {
+            frequencyInput.value = radio.value;
+          }
+
+          // Show/hide interval selector
+          if (intervalSelector) {
+            if (radio.value === 'subscribe') {
+              intervalSelector.hidden = false;
+            } else {
+              intervalSelector.hidden = true;
+            }
+          }
+
+          this.updatePrice();
+        });
+      });
+
+      // Interval selector change
+      const intervalSelect = document.getElementById('interval');
+      if (intervalSelect) {
+        intervalSelect.addEventListener('change', () => this.updatePrice());
+      }
+    }
+
+    updatePrice() {
+      const basePrice = parseFloat(this.container.dataset.basePrice || '0') * 100; // in cents
+      const dynamicPriceEl = document.getElementById('dynamic-price');
+      const savingsDisplay = document.getElementById('savings-display');
+      const savingsValue = document.getElementById('savings-value');
+      const savingsPeriod = document.getElementById('savings-period');
+
+      if (!dynamicPriceEl) return;
+
+      // Check if subscribe is selected
+      const subscribeRadio = this.container.querySelector('input[name="frequency"]:checked');
+      const isSubscribed = subscribeRadio && subscribeRadio.value === 'subscribe';
+
+      let finalPrice = basePrice;
+      let savings = 0;
+      let periodText = '';
+
+      if (isSubscribed) {
+        // 15% discount for subscription
+        finalPrice = Math.round(basePrice * 0.85);
+        savings = basePrice - finalPrice;
+
+        // Calculate period savings based on interval
+        const intervalSelect = document.getElementById('interval');
+        const interval = intervalSelect ? intervalSelect.value : 'monthly';
+
+        const intervalsPerYear = {
+          'weekly': 52,
+          'biweekly': 26,
+          'monthly': 12,
+          'quarterly': 4
+        };
+
+        const annualSavings = savings * (intervalsPerYear[interval] || 12);
+        periodText = ` per year (${interval} delivery)`;
+        savingsValue.textContent = `$${(annualSavings / 100).toFixed(2)}`;
+      } else {
+        savingsDisplay.hidden = true;
+      }
+
+      dynamicPriceEl.textContent = `$${(finalPrice / 100).toFixed(2)}`;
+
+      if (isSubscribed && savingsDisplay) {
+        savingsDisplay.hidden = false;
+        savingsPeriod.textContent = periodText;
+      }
+    }
+  }
+
+  // Initialize on DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const builders = document.querySelectorAll('.kindred-subscription-builder');
+    builders.forEach(builder => new KindredProductBuilder(builder));
+  });
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Kindred Product Page",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "media_size",
+      "options": [
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "large",
+      "label": "Media size"
+    },
+    {
+      "type": "select",
+      "id": "media_position",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left",
+      "label": "Media position"
+    },
+    {
+      "type": "select",
+      "id": "gallery_layout",
+      "options": [
+        { "value": "stacked", "label": "Stacked" },
+        { "value": "thumbnail", "label": "Thumbnail" },
+        { "value": "thumbnail_slider", "label": "Thumbnail slider" }
+      ],
+      "default": "stacked",
+      "label": "Gallery layout"
+    },
+    {
+      "type": "select",
+      "id": "mobile_thumbnails",
+      "options": [
+        { "value": "stacked", "label": "Stacked" },
+        { "value": "slider", "label": "Slider" }
+      ],
+      "default": "stacked",
+      "label": "Mobile thumbnails"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_info",
+      "default": true,
+      "label": "Enable sticky product info"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 36,
+      "label": "Padding top"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "default": 36,
+      "label": "Padding bottom"
+    }
+  ],
+  "blocks": [
+    { "type": "@app" },
+    {
+      "type": "title",
+      "name": "Title",
+      "limit": 1
+    },
+    {
+      "type": "price",
+      "name": "Price",
+      "limit": 1
+    },
+    {
+      "type": "subscription_builder",
+      "name": "Subscription Builder",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Build your subscription"
+        },
+        {
+          "type": "text",
+          "id": "roast_label",
+          "label": "Roast type label",
+          "default": "Roast level"
+        },
+        {
+          "type": "text",
+          "id": "grind_label",
+          "label": "Grind type label",
+          "default": "Grind type"
+        },
+        {
+          "type": "text",
+          "id": "frequency_label",
+          "label": "Frequency label",
+          "default": "Delivery frequency"
+        },
+        {
+          "type": "text",
+          "id": "onetime_label",
+          "label": "One-time label",
+          "default": "One-time purchase"
+        },
+        {
+          "type": "text",
+          "id": "subscribe_label",
+          "label": "Subscribe label",
+          "default": "Subscribe & Save 15%"
+        },
+        {
+          "type": "text",
+          "id": "badge_text",
+          "label": "Badge text",
+          "default": "BEST VALUE"
+        },
+        {
+          "type": "text",
+          "id": "interval_label",
+          "label": "Interval label",
+          "default": "Deliver every"
+        },
+        {
+          "type": "text",
+          "id": "price_label",
+          "label": "Price label",
+          "default": "Price per bag"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_savings",
+          "label": "Show savings calculation",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "savings_text",
+          "label": "Savings text",
+          "default": "You save"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_subscribe_badge",
+          "label": "Show Subscribe & Save badge",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "subscription_app",
+          "label": "Subscription app (for badge messaging)",
+          "options": [
+            { "value": "mock", "label": "Demo only (no app)" },
+            { "value": "recharge", "label": "Recharge" },
+            { "value": "shopify", "label": "Shopify Subscriptions" }
+          ],
+          "default": "mock"
+        },
+        {
+          "type": "header",
+          "content": "Grind options"
+        },
+        {
+          "type": "text",
+          "id": "grind_options",
+          "label": "Grind options (JSON array: [{label,value},...])",
+          "default": "[{\"label\":\"Whole Bean\",\"value\":\"Whole Bean\"},{\"label\":\"Drip / Pour Over\",\"value\":\"Drip\"},{\"label\":\"Espresso\",\"value\":\"Espresso\"},{\"label\":\"French Press\",\"value\":\"French Press\"}]"
+        },
+        {
+          "type": "header",
+          "content": "Interval options"
+        },
+        {
+          "type": "text",
+          "id": "interval_options",
+          "label": "Interval options (JSON array: [{label,value},...])",
+          "default": "[{\"label\":\"Every week\",\"value\":\"weekly\"},{\"label\":\"Every 2 weeks\",\"value\":\"biweekly\"},{\"label\":\"Every month\",\"value\":\"monthly\"},{\"label\":\"Every 3 months\",\"value\":\"quarterly\"}]"
+        }
+      ]
+    },
+    {
+      "type": "flavor_wheel",
+      "name": "Flavor Wheel",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Tasting notes"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_wheel",
+          "label": "Show visual flavor wheel",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "brew_guide",
+      "name": "Brew Guide",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Brew guide"
+        },
+        {
+          "type": "header",
+          "content": "Brew methods (configure in block settings)"
+        },
+        {
+          "type": "text",
+          "id": "brew_methods",
+          "label": "Brew methods (JSON array)",
+          "default": "[{\"name\":\"Pour Over (V60)\",\"ratio\":\"1:16\",\"grind\":\"Medium-fine\",\"temp\":\"93°C / 200°F\",\"time\":\"2:30-3:00\",\"steps\":[\"Place filter and rinse with hot water\",\"Add 22g coffee, shake to level\",\"Bloom with 50g water, wait 30s\",\"Pour remaining 300g in circular motion\",\"Total brew time ~2:45\"]},{\"name\":\"French Press\",\"ratio\":\"1:15\",\"grind\":\"Coarse\",\"temp\":\"96°C / 205°F\",\"time\":\"4:00\",\"steps\":[\"Add 30g coffee to press\",\"Pour 450g water, start timer\",\"At 4:00, break crust and skim\",\"Press plunger slowly\",\"Decant immediately\"]},{\"name\":\"Espresso\",\"ratio\":\"1:2\",\"grind\":\"Fine\",\"temp\":\"93°C / 200°F\",\"time\":\"25-30s\",\"steps\":[\"Dose 18-20g in portafilter\",\"Distribute and tamp evenly\",\"Lock in and start shot immediately\",\"Target 36-40g yield in 25-30s\",\"Enjoy straight or with milk\"]}]"
+        }
+      ]
+    },
+    {
+      "type": "description",
+      "name": "Description",
+      "limit": 1
+    },
+    {
+      "type": "quantity_selector",
+      "name": "Quantity selector",
+      "limit": 1
+    },
+    {
+      "type": "variant_picker",
+      "name": "Variant picker",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "picker_type",
+          "options": [
+            { "value": "dropdown", "label": "Dropdown" },
+            { "value": "button", "label": "Button" }
+          ],
+          "default": "button",
+          "label": "Picker type"
+        },
+        {
+          "id": "swatch_shape",
+          "label": "Swatch shape",
+          "type": "select",
+          "options": [
+            { "value": "circle", "label": "Circle" },
+            { "value": "square", "label": "Square" },
+            { "value": "none", "label": "None" }
+          ],
+          "default": "circle"
+        }
+      ]
+    },
+    {
+      "type": "buy_buttons",
+      "name": "Buy buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_dynamic_checkout",
+          "default": true,
+          "label": "Show dynamic checkout"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_gift_card_recipient",
+          "default": true,
+          "label": "Show gift card recipient"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_physical_stores",
+          "default": true,
+          "label": "Show physical stores"
+        }
+      ]
+    },
+    {
+      "type": "share",
+      "name": "Share",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "share_label",
+          "label": "Share label",
+          "default": "Share"
+        }
+      ]
+    },
+    {
+      "type": "custom_liquid",
+      "name": "Custom Liquid",
+      "settings": [
+        {
+          "type": "liquid",
+          "id": "custom_liquid",
+          "label": "Custom Liquid",
+          "info": "Add custom Liquid code here"
+        }
+      ]
+    },
+    {
+      "type": "collapsible_tab",
+      "name": "Collapsible tab",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "check_mark", "label": "Check mark" },
+            { "value": "truck", "label": "Truck" },
+            { "value": "leaf", "label": "Leaf" },
+            { "value": "question_mark", "label": "Question mark" }
+          ],
+          "default": "check_mark",
+          "label": "Icon"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content"
+        },
+        {
+          "type": "page",
+          "id": "page",
+          "label": "Page"
+        }
+      ]
+    },
+    {
+      "type": "popup",
+      "name": "Popup",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Link text"
+        },
+        {
+          "id": "page",
+          "type": "page",
+          "label": "Page"
+        }
+      ]
+    },
+    {
+      "type": "rating",
+      "name": "Rating",
+      "limit": 1
+    },
+    {
+      "type": "disclosures",
+      "name": "Disclosures",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Product details"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "options": [
+            { "value": "h2", "label": "H2" },
+            { "value": "h1", "label": "H1" },
+            { "value": "h0", "label": "H0" }
+          ],
+          "default": "h2",
+          "label": "Heading size"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "default": false,
+          "label": "Open by default"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Kindred Product Page",
+      "category": "Products",
+      "blocks": [
+        { "type": "title" },
+        { "type": "price" },
+        { "type": "subscription_builder" },
+        { "type": "flavor_wheel" },
+        { "type": "brew_guide" },
+        { "type": "description" },
+        { "type": "quantity_selector" },
+        { "type": "variant_picker" },
+        { "type": "buy_buttons" },
+        { "type": "share" },
+        { "type": "rating" }
+      ]
+    }
+  ]
+}
+{% endschema %}

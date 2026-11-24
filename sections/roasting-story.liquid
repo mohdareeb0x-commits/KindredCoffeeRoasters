@@ -1,0 +1,272 @@
+{% comment %}
+  How It's Roasted story section for Kindred Coffee Roasters.
+  Editorial layout with image and narrative content.
+{% endcomment %}
+
+<div class="roasting-story" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <div class="roasting-story__inner">
+    <div class="roasting-story__media" aria-hidden="true">
+      {% if section.settings.image != blank %}
+        {{ section.settings.image | image_url: width: 1200, height: 1500 | image_tag: loading: "lazy", sizes: "(max-width: 749px) 100vw, 50vw" }}
+      {% else %}
+        <div class="roasting-story__placeholder"></div>
+      {% endif %}
+    </div>
+
+    <div class="roasting-story__content">
+      {% if section.settings.eyebrow != blank %}
+        <p class="roasting-story__eyebrow">{{ section.settings.eyebrow }}</p>
+      {% endif %}
+
+      {% if section.settings.headline != blank %}
+        <h2 class="roasting-story__headline">{{ section.settings.headline }}</h2>
+      {% endif %}
+
+      {% if section.settings.body != blank %}
+        <div class="roasting-story__body">{{ section.settings.body }}</div>
+      {% endif %}
+
+      {% if section.settings.cta_text != blank and section.settings.cta_link != blank %}
+        <a href="{{ section.settings.cta_link }}" class="button button--secondary roasting-story__cta">
+          {{ section.settings.cta_text }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if section.settings.stats != blank %}
+    <div class="roasting-story__stats">
+      {% for block in section.blocks %}
+        <div class="roasting-story__stat">
+          <div class="roasting-story__stat-value">{{ block.settings.value }}</div>
+          <div class="roasting-story__stat-label">{{ block.settings.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .roasting-story {
+    padding: 100px 24px;
+  }
+
+  .roasting-story__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+  }
+
+  .roasting-story__media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: 16px;
+    overflow: hidden;
+    background: color_mix(var(--color-background), var(--color-text) 5%);
+  }
+
+  .roasting-story__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .roasting-story__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, color_mix(var(--color-background), var(--color-text) 5%) 0%, color_mix(var(--color-background), var(--color-text) 12%) 100%);
+  }
+
+  .roasting-story__content {
+    padding: 20px 0;
+  }
+
+  .roasting-story__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #C97B3C;
+    margin: 0 0 16px;
+  }
+
+  .roasting-story__headline {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0 0 24px;
+  }
+
+  .roasting-story__body {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: color_mix(var(--color-text), transparent 30%);
+    margin: 0 0 32px;
+  }
+
+  .roasting-story__body p {
+    margin: 0 0 1.5rem;
+  }
+
+  .roasting-story__body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .roasting-story__cta {
+    padding: 14px 32px;
+    font-size: 0.9375rem;
+  }
+
+  .roasting-story__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 32px;
+    max-width: 1200px;
+    margin: 64px auto 0;
+    padding: 40px 24px 0;
+    border-top: 1px solid color_mix(var(--color-text), transparent 85%);
+  }
+
+  .roasting-story__stat {
+    text-align: center;
+    padding: 0 16px;
+  }
+
+  .roasting-story__stat-value {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--color-text);
+    margin: 0 0 8px;
+  }
+
+  .roasting-story__stat-label {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: color_mix(var(--color-text), transparent 45%);
+    margin: 0;
+  }
+
+  @media (max-width: 999px) {
+    .roasting-story__inner {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    .roasting-story__media {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .roasting-story__content {
+      text-align: center;
+    }
+    .roasting-story__body {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .roasting-story__cta {
+      display: inline-block;
+    }
+  }
+
+  @media (max-width: 749px) {
+    .roasting-story {
+      padding: 80px 16px;
+    }
+    .roasting-story__inner {
+      gap: 32px;
+    }
+    .roasting-story__stats {
+      margin-top: 48px;
+      padding-top: 32px;
+      gap: 24px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Roasting Story",
+  "class": "roasting-story",
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "settings": [
+        {
+          "type": "text",
+          "id": "value",
+          "label": "Value",
+          "default": "12"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Years roasting"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Our Craft"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Roasted with intention, not automation"
+    },
+    {
+      "type": "richtext",
+      "id": "body",
+      "label": "Body text",
+      "default": "<p>Every batch begins with green coffee selected from farms we know by name. We roast on a vintage Probat drum roaster, where heat, airflow, and time are adjusted by hand for each origin.</p><p>No shortcuts. No dark roasts hiding defects. Just coffee that tastes like where it came from.</p>"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA button text",
+      "default": "Learn more"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Roasting Story",
+      "category": "Homepage",
+      "blocks": [
+        { "type": "stat", "settings": { "value": "12", "label": "Years roasting" } },
+        { "type": "stat", "settings": { "value": "34", "label": "Farm partners" } },
+        { "type": "stat", "settings": { "value": "8", "label": "Origins per season" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

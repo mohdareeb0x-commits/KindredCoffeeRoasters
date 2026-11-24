@@ -1,0 +1,432 @@
+{% comment %}
+  Customer reviews/testimonials section for Kindred Coffee Roasters.
+  Slider/carousel of customer reviews with author info.
+{% endcomment %}
+
+<div class="customer-reviews" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <div class="customer-reviews__header">
+    {% if section.settings.eyebrow != blank %}
+      <p class="customer-reviews__eyebrow">{{ section.settings.eyebrow }}</p>
+    {% endif %}
+    {% if section.settings.headline != blank %}
+      <h2 class="customer-reviews__headline">{{ section.settings.headline }}</h2>
+    {% endif %}
+  </div>
+
+  <div class="customer-reviews__slider" data-slider>
+    <div class="customer-reviews__track" role="list">
+      {% for block in section.blocks %}
+        <article class="customer-reviews__slide" role="listitem" {% if forloop.first %}data-active{% endif %}>
+          <div class="customer-reviews__rating" aria-label="{{ block.settings.rating }} out of 5 stars">
+            {% for i in (1..5) %}
+              <svg class="icon icon--star{% if i > block.settings.rating %} icon--star--empty{% endif %}" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            {% endfor %}
+          </div>
+          <blockquote class="customer-reviews__quote">{{ block.settings.quote }}</blockquote>
+          <footer class="customer-reviews__author">
+            {% if block.settings.avatar != blank %}
+              <div class="customer-reviews__avatar">
+                {{ block.settings.avatar | image_url: width: 60, height: 60 | image_tag: sizes: "60px" }}
+              </div>
+            {% endif %}
+            <div class="customer-reviews__author-info">
+              <cite class="customer-reviews__name">{{ block.settings.name }}</cite>
+              {% if block.settings.location != blank %}
+                <span class="customer-reviews__location">{{ block.settings.location }}</span>
+              {% endif %}
+              {% if block.settings.coffee != blank %}
+                <span class="customer-reviews__coffee">{{ block.settings.coffee }}</span>
+              {% endif %}
+            </div>
+          </footer>
+        </article>
+      {% endfor %}
+    </div>
+
+    <div class="customer-reviews__controls" aria-label="Review navigation">
+      <button class="customer-reviews__btn customer-reviews__btn--prev" aria-label="Previous review" data-prev>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="customer-reviews__dots" aria-label="Select review" data-dots></div>
+      <button class="customer-reviews__btn customer-reviews__btn--next" aria-label="Next review" data-next>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .customer-reviews {
+    padding: 100px 24px;
+  }
+
+  .customer-reviews__header {
+    max-width: 720px;
+    margin: 0 auto 56px;
+    text-align: center;
+  }
+
+  .customer-reviews__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #C97B3C;
+    margin: 0 0 16px;
+  }
+
+  .customer-reviews__headline {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .customer-reviews__slider {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .customer-reviews__track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 24px;
+    gap: 24px;
+    padding: 8px 24px 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .customer-reviews__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .customer-reviews__slide {
+    flex: 0 0 calc(50% - 12px);
+    min-width: 300px;
+    max-width: 420px;
+    scroll-snap-align: start;
+    padding: 32px;
+    background: color_mix(var(--color-background), var(--color-text) 3%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+  }
+
+  .customer-reviews__slide[data-active] {
+    border-color: color_mix(#C97B3C, transparent 50%);
+  }
+
+  .customer-reviews__rating {
+    display: flex;
+    gap: 4px;
+    color: #C97B3C;
+    margin-bottom: 20px;
+  }
+
+  .icon--star--empty {
+    color: color_mix(var(--color-text), transparent 70%);
+    fill: none;
+  }
+
+  .customer-reviews__quote {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: color_mix(var(--color-text), transparent 20%);
+    margin: 0 0 24px;
+    font-style: italic;
+  }
+
+  .customer-reviews__author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .customer-reviews__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: color_mix(var(--color-background), var(--color-text) 8%);
+  }
+
+  .customer-reviews__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .customer-reviews__author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .customer-reviews__name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    font-style: normal;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .customer-reviews__location {
+    font-size: 0.8125rem;
+    color: color_mix(var(--color-text), transparent 50%);
+  }
+
+  .customer-reviews__coffee {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8B4E2C;
+    text-transform: capitalize;
+  }
+
+  .customer-reviews__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .customer-reviews__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid color_mix(var(--color-text), transparent 85%);
+    border-radius: 50%;
+    background: var(--color-background);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  }
+
+  .customer-reviews__btn:hover {
+    border-color: color_mix(var(--color-text), transparent 50%);
+    background: color_mix(var(--color-background), var(--color-text) 5%);
+  }
+
+  .customer-reviews__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .customer-reviews__dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .customer-reviews__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: color_mix(var(--color-text), transparent 80%);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .customer-reviews__dot:hover {
+    background: color_mix(var(--color-text), transparent 50%);
+  }
+
+  .customer-reviews__dot[aria-selected="true"] {
+    background: #C97B3C;
+    transform: scale(1.2);
+  }
+
+  @media (max-width: 749px) {
+    .customer-reviews {
+      padding: 80px 16px;
+    }
+    .customer-reviews__slide {
+      flex: 0 0 100%;
+      min-width: 0;
+      max-width: none;
+      padding: 24px 20px;
+    }
+    .customer-reviews__track {
+      padding: 8px 16px 24px;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function() {
+    const slider = document.currentScript.closest('.customer-reviews__slider');
+    if (!slider) return;
+
+    const track = slider.querySelector('.customer-reviews__track');
+    const slides = track.querySelectorAll('.customer-reviews__slide');
+    const prevBtn = slider.querySelector('[data-prev]');
+    const nextBtn = slider.querySelector('[data-next]');
+    const dotsContainer = slider.querySelector('[data-dots]');
+
+    let currentIndex = 0;
+    const slideCount = slides.length;
+
+    // Create dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'customer-reviews__dot';
+      dot.setAttribute('aria-label', `Go to review ${i + 1}`);
+      dot.setAttribute('aria-selected', i === 0);
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = dotsContainer.querySelectorAll('.customer-reviews__dot');
+
+    function updateSlide(index) {
+      currentIndex = index;
+      track.scrollTo({
+        left: slides[index].offsetLeft - track.offsetLeft + track.scrollLeft - 24,
+        behavior: 'smooth'
+      });
+      slides.forEach((slide, i) => {
+        slide.toggleAttribute('data-active', i === index);
+      });
+      dots.forEach((dot, i) => {
+        dot.setAttribute('aria-selected', i === index);
+      });
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === slideCount - 1;
+    }
+
+    function goToSlide(index) {
+      if (index >= 0 && index < slideCount) {
+        updateSlide(index);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => goToSlide(currentIndex - 1));
+    nextBtn.addEventListener('click', () => goToSlide(currentIndex + 1));
+
+    // Keyboard navigation
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') goToSlide(currentIndex - 1);
+      if (e.key === 'ArrowRight') goToSlide(currentIndex + 1);
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    track.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        goToSlide(currentIndex + (diff > 0 ? 1 : -1));
+      }
+    }, { passive: true });
+
+    // Auto-advance (optional, pause on hover)
+    let autoAdvance = setInterval(() => {
+      goToSlide((currentIndex + 1) % slideCount);
+    }, 6000);
+
+    slider.addEventListener('mouseenter', () => clearInterval(autoAdvance));
+    slider.addEventListener('mouseleave', () => {
+      autoAdvance = setInterval(() => {
+        goToSlide((currentIndex + 1) % slideCount);
+      }, 6000);
+    });
+
+    // Initialize
+    updateSlide(0);
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Customer Reviews",
+  "class": "customer-reviews",
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Rating (1-5)",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "richtext",
+          "id": "quote",
+          "label": "Quote",
+          "default": "<p>\"The best coffee I've ever had. Period.\"</p>"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Name",
+          "default": "Sarah M."
+        },
+        {
+          "type": "text",
+          "id": "location",
+          "label": "Location",
+          "default": "Portland, OR"
+        },
+        {
+          "type": "text",
+          "id": "coffee",
+          "label": "Coffee name",
+          "default": "Ethiopia Yirgacheffe"
+        },
+        {
+          "type": "image_picker",
+          "id": "avatar",
+          "label": "Avatar"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Trusted by thousands"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "What our customers say"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Customer Reviews",
+      "category": "Homepage",
+      "blocks": [
+        { "type": "review", "settings": { "rating": 5, "quote": "<p>\"The best coffee I've ever had. Period. The Ethiopia Yirgacheffe is floral, bright, and completely transformed my morning ritual.\"</p>", "name": "Sarah M.", "location": "Portland, OR", "coffee": "Ethiopia Yirgacheffe" } },
+        { "type": "review", "settings": { "rating": 5, "quote": "<p>\"Finally, a subscription that actually works for me. I love being able to swap coffees each month based on what I'm in the mood for.\"</p>", "name": "James K.", "location": "Austin, TX", "coffee": "Colombia Huila" } },
+        { "type": "review", "settings": { "rating": 5, "quote": "<p>\"You can taste the care in every cup. The roasting dates are always recent, and the flavor notes are spot on.\"</p>", "name": "Maria L.", "location": "Seattle, WA", "coffee": "Guatemala Antigua" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

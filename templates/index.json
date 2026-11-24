@@ -1,0 +1,169 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "color_scheme": "scheme-3",
+        "headline": "Kindred Coffee Roasters",
+        "subheadline": "<p>Exceptional coffee, roasted with intention. From our roastery to your cup.</p>",
+        "cta_text": "Shop Coffee",
+        "cta_link": "shopify://collections/all",
+        "overlay_opacity": 25
+      }
+    },
+    "featured_products": {
+      "type": "featured-products",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "Our Seasonal Selection",
+        "headline": "Coffee worth waking up for",
+        "description": "<p>Each coffee is sourced from trusted partners and roasted to highlight its unique character.</p>",
+        "products_limit": 3,
+        "view_all_text": "View all coffee"
+      }
+    },
+    "roasting_story": {
+      "type": "roasting-story",
+      "blocks": {
+        "stat1": {
+          "type": "stat",
+          "settings": {
+            "value": "12",
+            "label": "Years roasting"
+          }
+        },
+        "stat2": {
+          "type": "stat",
+          "settings": {
+            "value": "34",
+            "label": "Farm partners"
+          }
+        },
+        "stat3": {
+          "type": "stat",
+          "settings": {
+            "value": "8",
+            "label": "Origins per season"
+          }
+        }
+      },
+      "block_order": ["stat1", "stat2", "stat3"],
+      "settings": {
+        "color_scheme": "scheme-2",
+        "eyebrow": "Our Craft",
+        "headline": "Roasted with intention, not automation",
+        "body": "<p>Every batch begins with green coffee selected from farms we know by name. We roast on a vintage Probat drum roaster, where heat, airflow, and time are adjusted by hand for each origin.</p><p>No shortcuts. No dark roasts hiding defects. Just coffee that tastes like where it came from.</p>",
+        "cta_text": "Learn more",
+        "cta_link": "shopify://pages/our-story"
+      }
+    },
+    "subscription_value": {
+      "type": "subscription-value",
+      "blocks": {
+        "benefit1": {
+          "type": "benefit",
+          "settings": {
+            "icon": "delivery",
+            "title": "Free shipping",
+            "text": "<p>Every delivery ships free, no minimum order required.</p>"
+          }
+        },
+        "benefit2": {
+          "type": "benefit",
+          "settings": {
+            "icon": "save",
+            "title": "Save 15%",
+            "text": "<p>Subscribers get 15% off every bag, every time.</p>"
+          }
+        },
+        "benefit3": {
+          "type": "benefit",
+          "settings": {
+            "icon": "flexible",
+            "title": "Total flexibility",
+            "text": "<p>Skip, pause, swap, or cancel anytime — no strings.</p>"
+          }
+        },
+        "benefit4": {
+          "type": "benefit",
+          "settings": {
+            "icon": "fresh",
+            "title": "Peak freshness",
+            "text": "<p>Roasted to order and shipped within 24 hours.</p>"
+          }
+        }
+      },
+      "block_order": ["benefit1", "benefit2", "benefit3", "benefit4"],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "Subscribe & Save",
+        "headline": "Coffee that arrives before you run out",
+        "description": "<p>Pick your coffee, set your schedule, and save 15% on every order. Pause or cancel anytime.</p>",
+        "cta_text": "Start subscription",
+        "cta_link": "shopify://collections/subscription"
+      }
+    },
+    "bundle_builder": {
+      "type": "bundle-builder",
+      "settings": {
+        "color_scheme": "scheme-2",
+        "eyebrow": "Create your perfect trio",
+        "headline": "Build Your Own Bundle",
+        "description": "<p>Pick any 3 bags for one fixed price. Mix and match your favorites or try something new.</p>",
+        "products_limit": 6,
+        "bundle_price": "48.00",
+        "add_to_cart_text": "Add bundle to cart",
+        "show_individual_link": true
+      }
+    },
+    "customer_reviews": {
+      "type": "customer-reviews",
+      "blocks": {
+        "review1": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "quote": "<p>\"The best coffee I've ever had. Period. The Ethiopia Yirgacheffe is floral, bright, and completely transformed my morning ritual.\"</p>",
+            "name": "Sarah M.",
+            "location": "Portland, OR",
+            "coffee": "Ethiopia Yirgacheffe"
+          }
+        },
+        "review2": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "quote": "<p>\"Finally, a subscription that actually works for me. I love being able to swap coffees each month based on what I'm in the mood for.\"</p>",
+            "name": "James K.",
+            "location": "Austin, TX",
+            "coffee": "Colombia Huila"
+          }
+        },
+        "review3": {
+          "type": "review",
+          "settings": {
+            "rating": 5,
+            "quote": "<p>\"You can taste the care in every cup. The roasting dates are always recent, and the flavor notes are spot on.\"</p>",
+            "name": "Maria L.",
+            "location": "Seattle, WA",
+            "coffee": "Guatemala Antigua"
+          }
+        }
+      },
+      "block_order": ["review1", "review2", "review3"],
+      "settings": {
+        "color_scheme": "scheme-2",
+        "eyebrow": "Trusted by thousands",
+        "headline": "What our customers say"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured_products",
+    "roasting_story",
+    "subscription_value",
+    "bundle_builder",
+    "customer_reviews"
+  ]
+}

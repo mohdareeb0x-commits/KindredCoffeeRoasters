@@ -1,0 +1,865 @@
+{% comment %}
+  Build Your Own Bundle section for Kindred Coffee Roasters.
+  Customers pick 3 bags from a curated list to create a discounted bundle.
+  Added to cart as a single bundled line item with properties.
+
+  Note: This is a theme-side UI implementation. The actual bundle pricing/discount
+  logic should be handled by a bundles app (Shopify Bundles, Bundle Builder, etc.)
+  or via Shopify Functions for cart transforms.
+{% endcomment %}
+
+<div class="bundle-builder" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <div class="bundle-builder__header">
+    {% if section.settings.eyebrow != blank %}
+      <p class="bundle-builder__eyebrow">{{ section.settings.eyebrow }}</p>
+    {% endif %}
+    {% if section.settings.headline != blank %}
+      <h2 class="bundle-builder__headline">{{ section.settings.headline }}</h2>
+    {% endif %}
+    {% if section.settings.description != blank %}
+      <div class="bundle-builder__description">{{ section.settings.description }}</div>
+    {% endif %}
+  </div>
+
+  <div class="bundle-builder__progress">
+    <div class="bundle-builder__progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="3" aria-label="Bags selected">
+      <div class="bundle-builder__progress-fill" style="width: 0%"></div>
+    </div>
+    <p class="bundle-builder__progress-text">
+      <span class="bundle-builder__selected-count">0</span> of 3 bags selected
+    </p>
+  </div>
+
+  <div class="bundle-builder__summary" hidden>
+    <h3 class="bundle-builder__summary-title">Your Bundle</h3>
+    <ul class="bundle-builder__summary-list" role="list"></ul>
+    <div class="bundle-builder__summary-price">
+      <span class="bundle-builder__summary-label">{{ section.settings.bundle_price_label | default: 'Bundle price' }}</span>
+      <span class="bundle-builder__summary-value" data-bundle-price>{{ section.settings.bundle_price | money }}</span>
+    </div>
+    <div class="bundle-builder__summary-savings">
+      <span class="bundle-builder__savings-label">{{ section.settings.savings_label | default: 'You save' }}</span>
+      <span class="bundle-builder__savings-value" data-savings></span>
+    </div>
+  </div>
+
+  <div class="bundle-builder__grid" role="list">
+    {% for product in section.settings.collection.products limit: section.settings.products_limit %}
+      <article class="bundle-builder__item" role="listitem" data-product-id="{{ product.id }}" data-price="{{ product.price }}">
+        <div class="bundle-builder__media">
+          <a href="{{ product.url }}">
+            {% if product.featured_image %}
+              {{ product.featured_image | image_url: width: 400, height: 500 | image_tag: loading: "lazy", sizes: "(max-width: 749px) 100vw, (max-width: 1199px) 33vw, 25vw" }}
+            {% else %}
+              <div class="bundle-builder__placeholder"></div>
+            {% endif %}
+          </a>
+          <button type="button" class="bundle-builder__toggle" aria-label="Add to bundle" aria-pressed="false">
+            <svg class="bundle-builder__toggle-icon--add" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <svg class="bundle-builder__toggle-icon--remove" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+          </button>
+          <div class="bundle-builder__selection-badge" aria-hidden="true">
+            <span class="bundle-builder__selection-number"></span>
+          </div>
+        </div>
+        <div class="bundle-builder__info">
+          <h3 class="bundle-builder__title">
+            <a href="{{ product.url }}">{{ product.title }}</a>
+          </h3>
+          {% if product.metafields.custom.tasting_notes != blank %}
+            <p class="bundle-builder__tasting">{{ product.metafields.custom.tasting_notes }}</p>
+          {% endif %}
+          <div class="bundle-builder__price">{{ product.price | money }}</div>
+        </div>
+      </article>
+    {% else %}
+      {% for i in (1..section.settings.products_limit) %}
+        <article class="bundle-builder__item bundle-builder__item--placeholder" role="listitem" aria-hidden="true">
+          <div class="bundle-builder__media"><div class="bundle-builder__placeholder"></div></div>
+          <div class="bundle-builder__info">
+            <h3 class="bundle-builder__title skeleton"></h3>
+            <p class="bundle-builder__tasting skeleton"></p>
+            <div class="bundle-builder__price skeleton"></div>
+          </div>
+        </article>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <div class="bundle-builder__actions">
+    <button type="button" class="button button bundle-builder__submit" disabled>
+      <span class="bundle-builder__submit-text">{{ section.settings.add_to_cart_text | default: 'Add bundle to cart' }}</span>
+      <span class="bundle-builder__submit-price" hidden></span>
+    </button>
+    {% if section.settings.show_individual_link %}
+      <a href="{{ section.settings.collection.url }}" class="bundle-builder__link">{{ section.settings.shop_individually_text | default: 'Or shop individually' }}</a>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .bundle-builder {
+    padding: 100px 24px;
+  }
+
+  .bundle-builder__header {
+    max-width: 720px;
+    margin: 0 auto 48px;
+    text-align: center;
+  }
+
+  .bundle-builder__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #C97B3C;
+    margin: 0 0 16px;
+  }
+
+  .bundle-builder__headline {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0 0 16px;
+  }
+
+  .bundle-builder__description {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: color_mix(var(--color-text), transparent 35%);
+    margin: 0;
+  }
+
+  /* Progress Bar */
+  .bundle-builder__progress {
+    max-width: 800px;
+    margin: 0 auto 40px;
+    padding: 0 16px;
+  }
+
+  .bundle-builder__progress-bar {
+    height: 8px;
+    background: color_mix(var(--color-background), var(--color-text) 8%);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .bundle-builder__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #C97B3C 0%, #8B4E2C 100%);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .bundle-builder__progress-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    text-align: center;
+    margin: 0;
+  }
+
+  .bundle-builder__selected-count {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    color: #C97B3C;
+  }
+
+  /* Product Grid */
+  .bundle-builder__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 40px;
+  }
+
+  .bundle-builder__item {
+    position: relative;
+    background: var(--color-background);
+    border: 2px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .bundle-builder__item:hover {
+    border-color: color_mix(var(--color-text), transparent 60%);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
+  }
+
+  .bundle-builder__item--selected {
+    border-color: #C97B3C;
+    box-shadow: 0 0 0 2px #C97B3C, 0 12px 24px -8px rgba(201, 123, 60, 0.15);
+  }
+
+  .bundle-builder__item--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .bundle-builder__media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: color_mix(var(--color-background), var(--color-text) 3%);
+  }
+
+  .bundle-builder__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .bundle-builder__item:hover .bundle-builder__media img {
+    transform: scale(1.03);
+  }
+
+  .bundle-builder__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, color_mix(var(--color-background), var(--color-text) 5%) 0%, color_mix(var(--color-background), var(--color-text) 12%) 100%);
+  }
+
+  .bundle-builder__toggle {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--color-background);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    z-index: 2;
+  }
+
+  .bundle-builder__toggle:hover {
+    transform: scale(1.1);
+  }
+
+  .bundle-builder__toggle-icon--add {
+    display: block;
+    color: var(--color-text);
+  }
+
+  .bundle-builder__toggle-icon--remove {
+    display: none;
+    color: var(--color-background);
+  }
+
+  .bundle-builder__item--selected .bundle-builder__toggle-icon--add {
+    display: none;
+  }
+
+  .bundle-builder__item--selected .bundle-builder__toggle-icon--remove {
+    display: block;
+  }
+
+  .bundle-builder__item--selected .bundle-builder__toggle {
+    background: #C97B3C;
+  }
+
+  .bundle-builder__selection-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #C97B3C;
+    color: #2D1B15;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+    z-index: 2;
+  }
+
+  .bundle-builder__item--selected .bundle-builder__selection-badge {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .bundle-builder__info {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bundle-builder__title {
+    font-family: var(--font-heading-family);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .bundle-builder__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .bundle-builder__tasting {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: color_mix(var(--color-text), transparent 50%);
+    margin: 0;
+    font-style: italic;
+  }
+
+  .bundle-builder__price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 4px;
+  }
+
+  /* Summary */
+  .bundle-builder__summary {
+    max-width: 400px;
+    margin: 0 auto 32px;
+    padding: 24px;
+    background: color_mix(var(--color-background), var(--color-text) 2%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bundle-builder__summary-title {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0 0 16px;
+    text-align: center;
+  }
+
+  .bundle-builder__summary-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+  }
+
+  .bundle-builder__summary-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid color_mix(var(--color-text), transparent 90%);
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .bundle-builder__summary-list li:last-child {
+    border-bottom: none;
+  }
+
+  .bundle-builder__summary-list .bundle-builder__summary-item-name {
+    color: color_mix(var(--color-text), transparent 30%);
+  }
+
+  .bundle-builder__summary-list .bundle-builder__summary-item-number {
+    background: #C97B3C;
+    color: #2D1B15;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  .bundle-builder__summary-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 16px;
+    border-top: 1px solid color_mix(var(--color-text), transparent 88%);
+    margin-bottom: 8px;
+  }
+
+  .bundle-builder__summary-label {
+    font-size: 0.9375rem;
+    color: color_mix(var(--color-text), transparent 40%);
+  }
+
+  .bundle-builder__summary-value {
+    font-family: var(--font-heading-family);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .bundle-builder__summary-savings {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #2E7D32;
+  }
+
+  .bundle-builder__savings-value {
+    font-weight: 700;
+  }
+
+  /* Actions */
+  .bundle-builder__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .bundle-builder__submit {
+    width: 100%;
+    padding: 18px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .bundle-builder__submit:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -8px rgba(139, 78, 44, 0.4);
+  }
+
+  .bundle-builder__submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .bundle-builder__submit-price {
+    margin-left: 12px;
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+  }
+
+  .bundle-builder__link {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: color_mix(var(--color-text), transparent 40%);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s ease;
+  }
+
+  .bundle-builder__link:hover {
+    color: var(--color-text);
+  }
+
+  /* Skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, color_mix(var(--color-background), var(--color-text) 5%) 25%, color_mix(var(--color-background), var(--color-text) 12%) 50%, color_mix(var(--color-background), var(--color-text) 5%) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  .bundle-builder__title.skeleton { height: 1.5rem; width: 70%; }
+  .bundle-builder__tasting.skeleton { height: 1rem; width: 50%; }
+  .bundle-builder__price.skeleton { height: 1.5rem; width: 40%; }
+
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @media (max-width: 749px) {
+    .bundle-builder { padding: 80px 16px; }
+    .bundle-builder__grid { gap: 16px; }
+    .bundle-builder__info { padding: 16px; }
+    .bundle-builder__toggle { width: 40px; height: 40px; bottom: 12px; right: 12px; }
+    .bundle-builder__selection-badge { width: 28px; height: 28px; top: 12px; left: 12px; }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  class BundleBuilder {
+    constructor(container) {
+      this.container = container;
+      this.maxItems = 3;
+      this.selectedItems = new Map(); // productId -> { element, data }
+      this.bundlePrice = parseFloat(container.dataset.bundlePrice || '0') * 100; // cents
+      this.items = container.querySelectorAll('.bundle-builder__item[data-product-id]');
+      this.init();
+    }
+
+    init() {
+      this.bindEvents();
+      this.updateUI();
+    }
+
+    bindEvents() {
+      this.items.forEach(item => {
+        const toggle = item.querySelector('.bundle-builder__toggle');
+        if (toggle) {
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleItem(item);
+          });
+        }
+
+        // Also allow clicking the whole card
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('a')) return; // Don't interfere with links
+          this.toggleItem(item);
+        });
+
+        // Keyboard support
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.toggleItem(item);
+          }
+        });
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-pressed', 'false');
+      });
+
+      // Submit button
+      const submitBtn = this.container.querySelector('.bundle-builder__submit');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', () => this.addToCart());
+      }
+    }
+
+    toggleItem(item) {
+      const productId = item.dataset.productId;
+
+      if (this.selectedItems.has(productId)) {
+        // Remove
+        this.selectedItems.delete(productId);
+        item.classList.remove('bundle-builder__item--selected');
+        item.setAttribute('aria-pressed', 'false');
+        const toggle = item.querySelector('.bundle-builder__toggle');
+        if (toggle) toggle.setAttribute('aria-pressed', 'false');
+      } else {
+        // Check if we can add more
+        if (this.selectedItems.size >= this.maxItems) {
+          // Shake the progress bar to indicate max reached
+          this.shakeProgress();
+          return;
+        }
+
+        // Add
+        const price = parseFloat(item.dataset.price || '0') * 100;
+        const title = item.querySelector('.bundle-builder__title a')?.textContent || item.querySelector('.bundle-builder__title')?.textContent;
+        const image = item.querySelector('img')?.src;
+
+        this.selectedItems.set(productId, { element: item, price, title, image });
+        item.classList.add('bundle-builder__item--selected');
+        item.setAttribute('aria-pressed', 'true');
+        const toggle = item.querySelector('.bundle-builder__toggle');
+        if (toggle) toggle.setAttribute('aria-pressed', 'true');
+      }
+
+      this.updateUI();
+    }
+
+    shakeProgress() {
+      const progress = this.container.querySelector('.bundle-builder__progress-bar');
+      if (progress) {
+        progress.style.animation = 'shake 0.4s ease';
+        setTimeout(() => progress.style.animation = '', 400);
+      }
+    }
+
+    updateUI() {
+      const count = this.selectedItems.size;
+      const isComplete = count === this.maxItems;
+
+      // Update progress bar
+      const progressFill = this.container.querySelector('.bundle-builder__progress-fill');
+      const progressText = this.container.querySelector('.bundle-builder__selected-count');
+      const progressBar = this.container.querySelector('.bundle-builder__progress-bar');
+
+      if (progressFill) {
+        progressFill.style.width = `${(count / this.maxItems) * 100}%`;
+      }
+      if (progressText) {
+        progressText.textContent = count;
+      }
+      if (progressBar) {
+        progressBar.setAttribute('aria-valuenow', count);
+      }
+
+      // Update selection numbers
+      let index = 1;
+      this.selectedItems.forEach(({ element }) => {
+        const badge = element.querySelector('.bundle-builder__selection-number');
+        if (badge) badge.textContent = index++;
+      });
+
+      // Disable/enable other items
+      this.items.forEach(item => {
+        const productId = item.dataset.productId;
+        if (!this.selectedItems.has(productId) && count >= this.maxItems) {
+          item.classList.add('bundle-builder__item--disabled');
+        } else {
+          item.classList.remove('bundle-builder__item--disabled');
+        }
+      });
+
+      // Update summary
+      this.updateSummary();
+
+      // Update submit button
+      const submitBtn = this.container.querySelector('.bundle-builder__submit');
+      const submitPrice = this.container.querySelector('.bundle-builder__submit-price');
+      if (submitBtn) {
+        submitBtn.disabled = !isComplete;
+        if (isComplete && submitPrice) {
+          submitPrice.hidden = false;
+          submitPrice.textContent = ` — $${(this.bundlePrice / 100).toFixed(2)}`;
+        } else if (submitPrice) {
+          submitPrice.hidden = true;
+        }
+      }
+    }
+
+    updateSummary() {
+      const summary = this.container.querySelector('.bundle-builder__summary');
+      const list = this.container.querySelector('.bundle-builder__summary-list');
+      const savingsValue = this.container.querySelector('[data-savings]');
+
+      if (this.selectedItems.size === 0) {
+        if (summary) summary.hidden = true;
+        return;
+      }
+
+      if (summary) summary.hidden = false;
+
+      if (list) {
+        list.innerHTML = '';
+        let index = 1;
+        let individualTotal = 0;
+
+        this.selectedItems.forEach(({ price, title, image }) => {
+          individualTotal += price;
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <span class="bundle-builder__summary-item-name">${title}</span>
+            <span class="bundle-builder__summary-item-number">${index}</span>
+          `;
+          list.appendChild(li);
+          index++;
+        });
+
+        // Calculate savings
+        const savings = individualTotal - this.bundlePrice;
+        if (savingsValue && savings > 0) {
+          savingsValue.textContent = `$${(savings / 100).toFixed(2)}`;
+        }
+      }
+    }
+
+    async addToCart() {
+      if (this.selectedItems.size !== this.maxItems) return;
+
+      const submitBtn = this.container.querySelector('.bundle-builder__submit');
+      const originalText = submitBtn.querySelector('.bundle-builder__submit-text')?.textContent;
+
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.bundle-builder__submit-text').textContent = 'Adding...';
+
+      // Build properties for the bundle line item
+      const properties = {};
+      let index = 1;
+      this.selectedItems.forEach(({ title, image }, productId) => {
+        properties[`Bag ${index}`] = title;
+        index++;
+      });
+      properties['Bundle Type'] = 'Build Your Own (3 bags)';
+      properties['_bundle'] = 'true';
+
+      // Add as a single line item with properties
+      // The actual product added should be a "Bundle" product in Shopify
+      // For demo, we'll add the first selected product with bundle properties
+      const firstItem = this.selectedItems.values().next().value;
+      const firstProductId = Array.from(this.selectedItems.keys())[0];
+
+      try {
+        const response = await fetch(`${window.location.origin}/cart/add.js`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: firstItem.element.dataset.variantId || firstProductId,
+            quantity: 1,
+            properties: properties
+          })
+        });
+
+        if (response.ok) {
+          // Show success
+          submitBtn.querySelector('.bundle-builder__submit-text').textContent = 'Added to cart!';
+          submitBtn.classList.add('button--success');
+
+          // Trigger cart drawer open
+          document.dispatchEvent(new CustomEvent('cart:refresh'));
+          document.dispatchEvent(new CustomEvent('cart:open'));
+
+          setTimeout(() => {
+            submitBtn.querySelector('.bundle-builder__submit-text').textContent = originalText;
+            submitBtn.classList.remove('button--success');
+            submitBtn.disabled = false;
+          }, 2000);
+        } else {
+          throw new Error('Failed to add to cart');
+        }
+      } catch (error) {
+        console.error('Bundle add to cart error:', error);
+        submitBtn.querySelector('.bundle-builder__submit-text').textContent = 'Error - try again';
+        setTimeout(() => {
+          submitBtn.querySelector('.bundle-builder__submit-text').textContent = originalText;
+          submitBtn.disabled = false;
+        }, 3000);
+      }
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    const builders = document.querySelectorAll('.bundle-builder');
+    builders.forEach(builder => new BundleBuilder(builder));
+  });
+
+  // Add shake animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  `;
+  document.head.appendChild(style);
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Build Your Own Bundle",
+  "class": "bundle-builder",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Create your perfect trio"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Build Your Own Bundle"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Pick any 3 bags for one fixed price. Mix and match your favorites or try something new.</p>"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Coffee collection"
+    },
+    {
+      "type": "range",
+      "id": "products_limit",
+      "label": "Products to show",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "default": 6,
+      "unit": "pcs"
+    },
+    {
+      "type": "header",
+      "content": "Bundle pricing"
+    },
+    {
+      "type": "text",
+      "id": "bundle_price",
+      "label": "Bundle price (e.g., 48.00)",
+      "default": "48.00"
+    },
+    {
+      "type": "text",
+      "id": "bundle_price_label",
+      "label": "Bundle price label",
+      "default": "Bundle price"
+    },
+    {
+      "type": "text",
+      "id": "savings_label",
+      "label": "Savings label",
+      "default": "You save"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Add to cart button text",
+      "default": "Add bundle to cart"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_individual_link",
+      "label": "Show 'shop individually' link",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "shop_individually_text",
+      "label": "Shop individually link text",
+      "default": "Or shop individually"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Build Your Own Bundle",
+      "category": "Homepage"
+    }
+  ]
+}
+{% endschema %}

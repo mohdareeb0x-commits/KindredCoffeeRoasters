@@ -1,0 +1,251 @@
+{% comment %}
+  Subscription value proposition section for Kindred Coffee Roasters.
+  Highlights subscription benefits with visual cards.
+{% endcomment %}
+
+<div class="subscription-value" style="--color-background: {{ section.settings.color_scheme.background }}; --color-text: {{ section.settings.color_scheme.text }}">
+  <div class="subscription-value__header">
+    {% if section.settings.eyebrow != blank %}
+      <p class="subscription-value__eyebrow">{{ section.settings.eyebrow }}</p>
+    {% endif %}
+    {% if section.settings.headline != blank %}
+      <h2 class="subscription-value__headline">{{ section.settings.headline }}</h2>
+    {% endif %}
+    {% if section.settings.description != blank %}
+      <div class="subscription-value__description">{{ section.settings.description }}</div>
+    {% endif %}
+  </div>
+
+  <div class="subscription-value__benefits" role="list">
+    {% for block in section.blocks %}
+      <article class="subscription-value__benefit" role="listitem">
+        <div class="subscription-value__icon" aria-hidden="true">
+          {% case block.settings.icon %}
+            {% when 'delivery' %}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><path d="M15 9h6v6"/><path d="M12 17v5"/><path d="M9 17v5"/></svg>
+            {% when 'save' %}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            {% when 'flexible' %}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            {% when 'fresh' %}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+            {% else %}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg>
+          {% endcase %}
+        </div>
+        <h3 class="subscription-value__title">{{ block.settings.title }}</h3>
+        <p class="subscription-value__text">{{ block.settings.text }}</p>
+      </article>
+    {% endfor %}
+  </div>
+
+  {% if section.settings.cta_text != blank and section.settings.cta_link != blank %}
+    <div class="subscription-value__cta">
+      <a href="{{ section.settings.cta_link }}" class="button button">
+        {{ section.settings.cta_text }}
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .subscription-value {
+    padding: 100px 24px;
+  }
+
+  .subscription-value__header {
+    max-width: 720px;
+    margin: 0 auto 64px;
+    text-align: center;
+  }
+
+  .subscription-value__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #C97B3C;
+    margin: 0 0 16px;
+  }
+
+  .subscription-value__headline {
+    font-family: var(--font-heading-family);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    margin: 0 0 16px;
+  }
+
+  .subscription-value__description {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: color_mix(var(--color-text), transparent 35%);
+    margin: 0;
+  }
+
+  .subscription-value__benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto 56px;
+  }
+
+  .subscription-value__benefit {
+    padding: 32px 24px;
+    background: color_mix(var(--color-background), var(--color-text) 3%);
+    border: 1px solid color_mix(var(--color-text), transparent 88%);
+    border-radius: 16px;
+    text-align: center;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .subscription-value__benefit:hover {
+    border-color: color_mix(var(--color-text), transparent 70%);
+    transform: translateY(-4px);
+  }
+
+  .subscription-value__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: color_mix(var(--color-background), #C97B3C 15%);
+    color: #8B4E2C;
+    margin-bottom: 20px;
+  }
+
+  .subscription-value__title {
+    font-family: var(--font-heading-family);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--color-text);
+    margin: 0 0 12px;
+  }
+
+  .subscription-value__text {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: color_mix(var(--color-text), transparent 40%);
+    margin: 0;
+  }
+
+  .subscription-value__cta {
+    text-align: center;
+  }
+
+  .subscription-value__cta .button {
+    padding: 16px 48px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 749px) {
+    .subscription-value {
+      padding: 80px 16px;
+    }
+    .subscription-value__header {
+      margin-bottom: 48px;
+    }
+    .subscription-value__benefits {
+      gap: 20px;
+    }
+    .subscription-value__benefit {
+      padding: 24px 20px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Subscription Value",
+  "class": "subscription-value",
+  "blocks": [
+    {
+      "type": "benefit",
+      "name": "Benefit",
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            { "value": "delivery", "label": "Delivery truck" },
+            { "value": "save", "label": "Save/Clock" },
+            { "value": "flexible", "label": "Calendar/Flexible" },
+            { "value": "fresh", "label": "Coffee bean/Fresh" }
+          ],
+          "default": "delivery"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Free shipping"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Description",
+          "default": "<p>Every delivery ships free, no minimum order required.</p>"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow text",
+      "default": "Subscribe & Save"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Coffee that arrives before you run out"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Pick your coffee, set your schedule, and save 15% on every order. Pause or cancel anytime.</p>"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA button text",
+      "default": "Start subscription"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Subscription Value",
+      "category": "Homepage",
+      "blocks": [
+        { "type": "benefit", "settings": { "icon": "delivery", "title": "Free shipping", "text": "<p>Every delivery ships free, no minimum order required.</p>" } },
+        { "type": "benefit", "settings": { "icon": "save", "title": "Save 15%", "text": "<p>Subscribers get 15% off every bag, every time.</p>" } },
+        { "type": "benefit", "settings": { "icon": "flexible", "title": "Total flexibility", "text": "<p>Skip, pause, swap, or cancel anytime — no strings.</p>" } },
+        { "type": "benefit", "settings": { "icon": "fresh", "title": "Peak freshness", "text": "<p>Roasted to order and shipped within 24 hours.</p>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
